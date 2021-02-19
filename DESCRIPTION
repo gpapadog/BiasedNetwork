@@ -1,18 +1,17 @@
-Package: BAC
+Package: BiasedNetwork
 Type: Package
-Title: Bayesian Adjustment for Confounding
+Title: Latent factor network model allowing for unrecorded interactions
 Version: 0.0.0.9000
-Date: 2016-10-19
+Date: 2021-02-19
 Author: Georgia Papadogeorgou
 Maintainer: Georgia Papadogeorgou <gpapadogeorgou@gmail.com>
 Description: FILL
 License: GPL (>= 2)
 LazyData: TRUE
-URL: https://github.com/gpapadog/BAC
-BugReports: https://github.com/gpapadog/BAC/issues
+URL: https://github.com/gpapadog/BiasedNetwork
+BugReports: https://github.com/gpapadog/BiasedNetwork/issues
 RoxygenNote: 7.1.0
 Suggests:
-Depends: data.table
+Depends:
 VignetteBuilder: knitr
-Imports: MCMCpack,
-         plyr
+Imports: 
