@@ -2,7 +2,8 @@
 % Please edit documentation in R/MCMC_function.R
 \name{MCMC}
 \alias{MCMC}
-\title{MCMC for bipartite network model with trait information}
+\title{MCMC for bipartite network model with trait information and unrecorded
+interactions}
 \usage{
 MCMC(
   obs_A,

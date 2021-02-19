@@ -8,7 +8,26 @@ TraitMatching3(B = 500, mod_pL1s, Xs, Ws, obs_X, obs_W)
 }
 \arguments{
 \item{B}{Numeric. Number of times to perform the resampling. Default is 500.}
+
+\item{mod_pL1s}{Posterior samples for the fitted probabilities of the
+interaction model. Returned by the function MCMC.}
+
+\item{Xs}{Posterior samples of imputed values for the covariates of the
+first set of species. Returned by the function MCMC.}
+
+\item{Ws}{Posterior samples of imputed values for the covariates of the
+second set of species. Returned by the function MCMC.}
+
+\item{obs_X}{The design matrix of covariates for the first set of species.
+Number of rows is number of species and number of columns is number of
+covariates.}
+
+\item{obs_W}{The design matrix of covariates for the second set of species.
+Number of rows is number of species and number of columns is number of
+covariates.}
 }
 \description{
-Trait matching for species interactions
+Fitting multivariate regression of the logit of fitted interaction
+probability values on all covariates and using permutation to get their
+distribution under the null of no association.
 }

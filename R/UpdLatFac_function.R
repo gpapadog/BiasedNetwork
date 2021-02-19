@@ -1,5 +1,13 @@
-#' @param latfac
-#' @param latfac_others
+#' Updating the model's latent factors
+#' 
+#' MCMC sampling of latent factors for either set of species.
+#' 
+#' @param latfac Current values of the latent factors to be updated. Matrix
+#' with number of rows equal to the number of species and number of columns
+#' equal to the number of factors.
+#' @param latfac_others Current values of the latent factors fot the other set
+#' of species, not to be updated. Matrix. Rows correspond to species and
+#' columns correspond to latent factors.
 #' @param probobs Vector including the values for the probability of observing
 #' a given species interaction within a study. Should be of length equal to the
 #' number of species among this set.
@@ -9,19 +17,28 @@
 #' geographical and taxonomical bias is performed, so this part of the model
 #' does not inform the updates of the latent factors. Should be of length equal
 #' to the number of latent factors used plus 1 for the intercept.
-#' @param var_probobs
-#' @param obs_covs
+#' @param var_probobs Numeric. Variance in the model for the probability of
+#' detecting an interaction. Used only if performing bias correction.
+#' @param obs_covs  Matrix of observed traits. Rows correspond to species and
+#' columns correspond to covariates. Continuous covariates should be included
+#' first.
 #' @param omega_obs_covs The Polya-Gamma omegas from the models of binary
 #' covariates. Matrix. Rows correspond to units, columns to binary traits.
-#' @param num_covs
-#' @param coefs_covs
-#' @param var_covs
-#' @param curr_inter
-#' @param coefs_inter
+#' @param num_covs Vector of length 2 including the number of continuous and
+#' binary traits.
+#' @param coefs_covs Matrix of latent factor coefficients in the traits models.
+#' Rows correspond to traits and columns to factors.
+#' @param var_covs Vector of length equal to the number of continuous traits
+#' including the residual variance of the corresponding model.
+#' @param curr_inter Matrix with rows corresponding to the set of species whose
+#' latent factors we are updating and columns corresponding to the other set of
+#' species. Entries are 0 or 1.
+#' @param coefs_inter Vector including the coefficients in the network model.
 #' @param omega_inter The omegas generated from the Polya-Gamma for the model
 #' of the true interactions L. The rows should correspond to the units whose
 #' latent factors are updated using this function.
-#' @param prior_S_inv
+#' @param prior_S_inv The inverse of the current correlation matrix for the
+#' latent factors that are being updated.
 #' 
 UpdLatFac <- function(latfac, latfac_others,
                       probobs, coefs_probobs, var_probobs,

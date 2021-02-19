@@ -1,3 +1,16 @@
+#' Updating the correlation coefficient for latent factors.
+#' 
+#' @param curr_r Current value of the correlation coefficient.
+#' @param curr_S Current value of the correlation matrix for the latent
+#' factors.
+#' @param corr_C Phylogenetic correlation matrix.
+#' @param latfac Current values of the latent factors. Matrix with rows
+#' corresponding to the species and columns to factors.
+#' @param mh_n Parameter n in the Beta proposal for updating the 
+#' correlation coefficient for latent factors.
+#' @param prior_rho Hyperparameters of the beta prior for the weight rho in 
+#' the correlation matrix for latent factors. Defaults to (5, 5).
+#' 
 UpdRho <- function(curr_r, curr_S, corr_C, latfac, mh_n, prior_rho) {
   
   r <- list(new_value_r = curr_r, new_value_S = curr_S, accepted = 0)

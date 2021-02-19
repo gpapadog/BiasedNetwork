@@ -1,3 +1,5 @@
+#' Updating the coefficients in the traits model.
+#' 
 #' @param obs_cov Matrix of observed values for the covariates. Rows
 #' correspond to units and columns to covariates.
 #' @param latfac Latent factor positions for all subjects. Matrix of rows
@@ -14,8 +16,7 @@
 #' covariates.
 #' @param prior_mu0 Mean of the prior distribution on intercepts.
 #' @param prior_sigmasq0 Variance of the prior distribution on intercepts.
-
-
+#' 
 UpdTraitCoef <- function(obs_cov, latfac, resid_var, shr_var, extra_var,
                          curr_coefs, num_covs, prior_mu0, prior_sigmasq0)  {
   
