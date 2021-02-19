@@ -1,4 +1,4 @@
-# Classic expit function.
+#' Classic expit function.
 expit <- function(x) {
   return(exp(x) / (1 + exp(x)))
 }

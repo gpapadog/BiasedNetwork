@@ -8,6 +8,8 @@
 #' 
 #' @return Correlation matrix.
 #' 
+#' @export
+#' 
 CorrMat <- function(n, groups = NULL, values = NULL) {
   
   Cmat <- diag(n)

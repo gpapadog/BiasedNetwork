@@ -1,4 +1,5 @@
-#' MCMC for bipartite network model with trait information
+#' MCMC for bipartite network model with trait information and unrecorded
+#' interactions
 #' 
 #' Perform MCMC to acquire samples from the posterior distribution of model
 #' parameters for a model for the true interaction matrix among different sets
@@ -51,6 +52,7 @@
 #' corresponding start_value is specified to be set to the parameter's true
 #' value. Defaults to NULL, and when set to NULL all parameters are sampled.
 #' 
+#' @export
 #' 
 MCMC <- function(obs_A, obs_n, obs_X, obs_W, Cu, Cv,
                  Nsims, burn, thin, use_H = 10, bias_cor = TRUE,
