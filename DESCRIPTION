@@ -1,0 +1,18 @@
+Package: BAC
+Type: Package
+Title: Bayesian Adjustment for Confounding
+Version: 0.0.0.9000
+Date: 2016-10-19
+Author: Georgia Papadogeorgou
+Maintainer: Georgia Papadogeorgou <gpapadogeorgou@gmail.com>
+Description: FILL
+License: GPL (>= 2)
+LazyData: TRUE
+URL: https://github.com/gpapadog/BAC
+BugReports: https://github.com/gpapadog/BAC/issues
+RoxygenNote: 7.1.0
+Suggests:
+Depends: data.table
+VignetteBuilder: knitr
+Imports: MCMCpack,
+         plyr
