@@ -14,10 +14,10 @@
 #' whether the current study would be willing to record the interactions of a
 #' given species. The value should be 1 except for studies that are animal or
 #' plant-oriented, where the value for species that are not of focus will be 0.
-#' @param cooccur Array of three dimensions corresponding to the two sets of
-#' species and the studies. Values should be between 0 or 1 representing the
-#' probability of co-occurance for the two species. If two species are known to
-#' exist in the area under study the value should be set to 1.
+#' @param occur_B Matrix with rows corresponding to the first set of species
+#' and columns to studies. Values represent the probability of occurence, and
+#' they should be between 0 and 1.
+#' @param occur_P Same as occur_B but for the second set of species.
 #' @param obs_X Matrix of observed covariates for the first set of species.
 #' Rows correspond to species, columns to covariates. Continuous covariates
 #' should be first, and binary covariates should follow.
@@ -64,7 +64,7 @@
 #' 
 #' @export
 #' 
-MCMC <- function(obs_A, focus, cooccur, obs_X, obs_W, Cu, Cv,
+MCMC <- function(obs_A, focus, occur_B, occur_P, obs_X, obs_W, Cu, Cv,
                  Nsims, burn, thin, use_H = 10, bias_cor = TRUE,
                  theta_inf = 0.01,
                  mh_n_pis = 100, mh_n_pjs = 100, mh_n_rho = 100,
@@ -77,12 +77,13 @@ MCMC <- function(obs_A, focus, cooccur, obs_X, obs_W, Cu, Cv,
   # -------------------- PART 0 ------------------- #
   # ------- Specifying what will be sampled. ------- #
   
-  if (is.null(sampling)) {
+  if (is.null(sampling)) {  # All parameters will be updated.
     sampling <- list(L = TRUE, lambda = TRUE, tau = TRUE, beta = TRUE,
                      gamma = TRUE, sigmasq = TRUE, sigmasq_p = TRUE,
                      delta = TRUE, zeta = TRUE, U = TRUE, V = TRUE, v = TRUE,
                      z = TRUE, theta = TRUE, pis = TRUE, pjs = TRUE, rU = TRUE,
-                     rV = TRUE, miss_X = TRUE, miss_W = TRUE)
+                     rV = TRUE, miss_X = TRUE, miss_W = TRUE, O_B = TRUE,
+                     O_P = TRUE)
   }
   
   if (!bias_cor) {  # Without bias adjustment, some parameters are not updated:
@@ -95,19 +96,37 @@ MCMC <- function(obs_A, focus, cooccur, obs_X, obs_W, Cu, Cv,
     sampling$pjs <- FALSE
   }
   
+  # If the probabilities of occurence for the first set of species is either 0
+  # or 1, we never have to update their occurence indicator.
+  if (length(unique(as.numeric(occur_B))) <= 2) {
+    sampling$O_B <- FALSE
+  }
+  # Similarly for the second set of species:
+  if (length(unique(as.numeric(occur_P))) <= 2) {
+    sampling$O_P <- FALSE
+  } 
   
   # ---------------- PART 1 ------------- #
   # Getting the parameters that we use throughout:
   
   # Sample size
-  nB <- nrow(obs_A)
-  nP <- ncol(obs_A)
+  nB <- dim(obs_A)[1]
+  nP <- dim(obs_A)[2]
+  nstudies <- dim(obs_A)[3]
   
   cat('MCMC on', nB, 'x', nP, 'number of species.', fill = TRUE)
   
-  # Which A indices are equal to 0.
-  index_A0 <- which(obs_A == 0)
+  # Getting the combined network:
+  comb_A <- apply(obs_A, c(1, 2), sum)
+  comb_A <- (comb_A > 0) * 1
+  
+  # Which species in the combined network have unrecorded interactions.
+  index_A0 <- which(comb_A == 0)
   quant_A0 <- length(index_A0)
+  
+  # Getting whether the species were detected in each study.
+  detected_B <- (apply(obs_A, c(1, 3), sum) > 0) * 1
+  detected_P <- (apply(obs_A, c(2, 3), sum) > 0) * 1
   
   # Continuous and binary covariates.
   entries_X <- apply(obs_X, 2, function(x) length(unique(x[!is.na(x)])))
@@ -180,7 +199,7 @@ MCMC <- function(obs_A, focus, cooccur, obs_X, obs_W, Cu, Cv,
   # Setting starting values for the parameters.
   
   this_L <- matrix(rbinom(nB * nP, 1, 1 / 2), nB, nP)
-  this_L[obs_A == 1] <- 1
+  this_L[comb_A == 1] <- 1
   this_U <- matrix(rnorm(nB * use_H), nB, use_H)
   this_V <- matrix(rnorm(nP * use_H), nP, use_H)
   this_lambda <- rnorm(use_H + 1, 0, 1)
@@ -207,6 +226,21 @@ MCMC <- function(obs_A, focus, cooccur, obs_X, obs_W, Cu, Cv,
   this_W <- obs_W
   this_mod_pL1 <- matrix(NA, nrow = nB, ncol = nP)
   this_pL1 <- matrix(NA, nrow = nB, ncol = nP)
+  
+  # ------- Dealing with individual study focus and co-occurence.
+  # Indicator of occurence for each set of species:
+  this_O_B <- matrix(rbinom(nB * nstudies, 1, prob = occur_B), nB, nstudies)
+  this_O_P <- matrix(rbinom(nP * nstudies, 1, prob = occur_P), nP, nstudies)
+  # Indicator of co-occurence:
+  this_O <- as.numeric(do.call(abind::abind, c(lapply(seq(nstudies), function(ss)
+    outer(this_O_B[,ss], this_O_P[,ss])), along = 3)))
+  
+  # Number of studies with focus and occurence with recorded interaction
+  this_AFO <- apply(obs_A * focus * this_O, c(1, 2), sum)
+  # Number of studies with focus and occurence without recorded interaction
+  this_1_AFO <- apply((1 - obs_A) * focus * this_O, c(1, 2), sum)
+  # Total number of studies with focus and occurence
+  this_FO <- this_AFO + this_1_AFO
   
   # Draw starting values for missing covariates from observed distribution.
   if (any_X_miss) {
@@ -248,7 +282,7 @@ MCMC <- function(obs_A, focus, cooccur, obs_X, obs_W, Cu, Cv,
   
   # If we do not perform bias correction, change the starting values:
   if (!bias_cor) {
-    this_L <- obs_A
+    this_L <- comb_A
     this_delta <- rep(NA, use_H + 1)
     this_tau_delta <- rep(NA, use_H)
     this_zeta <- rep(NA, use_H + 1)
@@ -284,6 +318,7 @@ MCMC <- function(obs_A, focus, cooccur, obs_X, obs_W, Cu, Cv,
         lat_prod <- matrix(this_U[, hh], ncol = 1) %*% matrix(this_V[, hh], nrow = 1)
         logit_pijL <- logit_pijL + this_lambda[hh + 1] * lat_prod
       }
+      # Interaction probability without bias correction.
       this_mod_pL1 <- expit(logit_pijL)
       
     }
@@ -294,7 +329,7 @@ MCMC <- function(obs_A, focus, cooccur, obs_X, obs_W, Cu, Cv,
       pipj <- outer(this_pi, this_pj)
       
       # Probability of L = 1, or L = 0, when A = 0.
-      pL1 <- this_mod_pL1 * (1 - pipj) ^ obs_n
+      pL1 <- this_mod_pL1 * (1 - pipj) ^ this_FO
       pL0 <- 1 - this_mod_pL1
       this_pL1 <- pL1 / (pL0 + pL1)  # Standardize.
       
@@ -565,7 +600,8 @@ MCMC <- function(obs_A, focus, cooccur, obs_X, obs_W, Cu, Cv,
                                  curr_inter = this_L,
                                  obs_inter = obs_A,
                                  mh_n = mh_n_pis,
-                                 n_studies = obs_n,
+                                 obs_in_poss = this_AFO,
+                                 unobs_in_poss = this_1_AFO,
                                  latfac = this_U,
                                  coefs_probobs = this_delta,
                                  var_probobs = this_sigmasq_pB)
@@ -579,7 +615,8 @@ MCMC <- function(obs_A, focus, cooccur, obs_X, obs_W, Cu, Cv,
                                  curr_inter = t(this_L),
                                  obs_inter = t(obs_A),
                                  mh_n = mh_n_pjs,
-                                 n_studies = t(obs_n),
+                                 obs_in_poss = t(this_AFO),
+                                 unobs_in_poss = t(this_1_AFO),
                                  latfac = this_V,
                                  coefs_probobs = this_zeta,
                                  var_probobs = this_sigmasq_pP)
@@ -641,6 +678,41 @@ MCMC <- function(obs_A, focus, cooccur, obs_X, obs_W, Cu, Cv,
       }
     }
     
+    
+    # ----------- Occurrence indicators -------------- #
+    
+    if (sampling$O_B) {
+      
+      this_O_B <- UpdOccur(detected = detected_B,
+                           occur = occur_B,
+                           probobs_curr = this_pi,
+                           probobs_others = this_pj,
+                           curr_inter = this_L,
+                           focus = focus)
+      
+    }
+    
+    if (sampling$O_P) {
+      
+      this_O_P <- UpdOccur(detected = detected_P,
+                           occur = occur_P,
+                           probobs_curr = this_pj,
+                           probobs_others = this_pi,
+                           curr_inter = t(this_L),
+                           focus = aperm(focus, c(2, 1, 3)))
+      
+    }
+    
+    if (sampling$O_B | sampling$O_P) {  # If updated, update derived quantities
+      
+      this_O <- as.numeric(do.call(abind::abind, c(lapply(seq(nstudies), function(ss)
+        outer(this_O_B[,ss], this_O_P[,ss])), along = 3)))
+      
+      this_AFO <- apply(obs_A * focus * this_O, c(1, 2), sum)
+      this_1_AFO <- apply((1 - obs_A) * focus * this_O, c(1, 2), sum)
+      this_FO <- this_AFO + this_1_AFO
+      
+    }
     
     # -------------- END OF MCMC UPDATES ------------- #
       

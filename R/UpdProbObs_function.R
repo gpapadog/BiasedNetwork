@@ -15,10 +15,14 @@
 #' rows correspond to the species we are updating and the columns correspond to
 #' the other set of species.
 #' @param mh_n Numeric. Parameter n in the Beta proposal distribution.
-#' @param n_studies Matrix with rows corresponding to the set of species we
+#' @param obs_in_poss Matrix with rows corresponding to the set of species we
 #' are updating and rows corresponding to the other set. The matrix includes
-#' integer values with the number of studies that have detected at least one
-#' interaction of both species. 
+#' a count for the number of studies that could have recorded the interaction
+#' and did record it.
+#' @param unobs_in_poss Matrix with rows corresponding to the set of species we
+#' are updating and rows corresponding to the other set. The matrix includes
+#' a count for the number of studies that could have recorded the interaction
+#' but they did not record it.
 #' @param latfac Current values of the latent factors for the set of species
 #' whose probability of detection is to be updated. Matrix with rows
 #' corresponding to the species and columns corresponding to the factors.
@@ -33,7 +37,8 @@
 #' 
 #' 
 UpdProbObs <- function(probobs_curr, probobs_others, curr_inter, obs_inter,
-                       mh_n, n_studies, latfac, coefs_probobs, var_probobs) {
+                       mh_n, obs_in_poss, unobs_in_poss, latfac, coefs_probobs,
+                       var_probobs) {
   
   # Acquiring quantities that will be used later:
   num_obs <- nrow(latfac)
@@ -46,12 +51,9 @@ UpdProbObs <- function(probobs_curr, probobs_others, curr_inter, obs_inter,
   pipj_prop <- outer(p_prop, probobs_others)
   pipj_curr <- outer(probobs_curr, probobs_others)
   
-  lik_part1 <- ((1 - (1 - pipj_prop) ^ n_studies) /
-                  (1 - (1 - pipj_curr) ^ n_studies))
-  lik_part2 <- (1 - pipj_prop) / (1 - pipj_curr)
-  lik <- (lik_part1 ^ (obs_inter * curr_inter) *
-            lik_part2 ^ (n_studies * (1 - obs_inter) * curr_inter))
-  
+  lik_p1 <- (pipj_prop / pipj_curr) ^ (curr_inter * obs_in_poss)
+  lik_p2 <- ((1 - pipj_prop) / (1 - pipj_curr)) ^ (curr_inter * unobs_in_poss)
+
   # Prior part:
   prior_lik <- (dnorm(logit(p_prop), prior_mean, sqrt(var_probobs)) /
                   dnorm(logit(probobs_curr), prior_mean, sqrt(var_probobs)))
@@ -61,7 +63,7 @@ UpdProbObs <- function(probobs_curr, probobs_others, curr_inter, obs_inter,
                  dbeta(p_prop, mh_n * probobs_curr, mh_n * (1 - probobs_curr)))
   
   # Acceptance probability.
-  AP <- apply(lik, 1, prod) * prior_lik * prop_lik
+  AP <- apply(lik_p1 * lik_p2, 1, prod) * prior_lik * prop_lik
   
   u <- runif(num_obs)
   
