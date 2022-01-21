@@ -5,9 +5,19 @@
 #' parameters for a model for the true interaction matrix among different sets
 #' of species with available trait information.
 #' 
-#' @param obs_A Observed interaction matrix. Contains values of 0 and 1.
-#' @param obs_n Matrix with the same dimensions as obs_A. Includes the number
-#' of studies in which both species were observed.
+#' @param obs_A Observed interaction array. Contains values of 0 and 1. The
+#' array is of three dimensions. The first dimension represents the first set
+#' of species, the second dimension is the second set of species, and the third
+#' dimension is the different studies.
+#' @param focus Array of three dimensions corresponding to the two sets of
+#' species, and the different studies. Values are 0 or 1. This array represents
+#' whether the current study would be willing to record the interactions of a
+#' given species. The value should be 1 except for studies that are animal or
+#' plant-oriented, where the value for species that are not of focus will be 0.
+#' @param cooccur Array of three dimensions corresponding to the two sets of
+#' species and the studies. Values should be between 0 or 1 representing the
+#' probability of co-occurance for the two species. If two species are known to
+#' exist in the area under study the value should be set to 1.
 #' @param obs_X Matrix of observed covariates for the first set of species.
 #' Rows correspond to species, columns to covariates. Continuous covariates
 #' should be first, and binary covariates should follow.
@@ -54,7 +64,7 @@
 #' 
 #' @export
 #' 
-MCMC <- function(obs_A, obs_n, obs_X, obs_W, Cu, Cv,
+MCMC <- function(obs_A, focus, cooccur, obs_X, obs_W, Cu, Cv,
                  Nsims, burn, thin, use_H = 10, bias_cor = TRUE,
                  theta_inf = 0.01,
                  mh_n_pis = 100, mh_n_pjs = 100, mh_n_rho = 100,
