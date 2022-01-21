@@ -291,7 +291,9 @@ MCMC <- function(obs_A, focus, occur_B, occur_P, obs_X, obs_W, Cu, Cv,
     this_sigmasq_pP <- NA
     this_pi <- rep(1, nB)
     this_pj <- rep(1, nP)
-    obs_n <- matrix(NA, nB, nP)  # Does not inform anything.
+    this_AFO <- matrix(NA, nB, nP)  # Does not inform anything.
+    this_1_AFO <- matrix(NA, nB, nP)  # Does not inform anything.
+    this_FO <- matrix(NA, nB, nP)  # Does not inform anything.
   }
   
   
