@@ -94,6 +94,8 @@ MCMC <- function(obs_A, focus, occur_B, occur_P, obs_X, obs_W, Cu, Cv,
     sampling$zeta <- FALSE
     sampling$pis <- FALSE
     sampling$pjs <- FALSE
+    sampling$O_B <- FALSE
+    sampling$O_P <- FALSE
   }
   
   # If the probabilities of occurence for the first set of species is either 0
@@ -104,7 +106,7 @@ MCMC <- function(obs_A, focus, occur_B, occur_P, obs_X, obs_W, Cu, Cv,
   # Similarly for the second set of species:
   if (length(unique(as.numeric(occur_P))) <= 2) {
     sampling$O_P <- FALSE
-  } 
+  }
   
   # ---------------- PART 1 ------------- #
   # Getting the parameters that we use throughout:
