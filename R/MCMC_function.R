@@ -28,6 +28,8 @@
 #' @param burn Number of samples to be burnt in the beginning of the MCMC.
 #' @param thin MCMC sampling thinning.
 #' @param use_H Number of latent factors to be used. Defaults to 10.
+#' @param use_shrinkage Logical. Whether the shrinkage prior on the variance 
+#' terms should be used. Defaults to TRUE.
 #' @param bias_cor Logical. Whether the model should aim to correct for
 #' geographical and taxonomical bias. If set to FALSE, the MCMC is simplied
 #' since the observed matrix of interactions is considered the same as the
@@ -65,8 +67,8 @@
 #' @export
 #' 
 MCMC <- function(obs_A, focus, occur_B, occur_P, obs_X, obs_W, Cu, Cv,
-                 Nsims, burn, thin, use_H = 10, bias_cor = TRUE,
-                 theta_inf = 0.01,
+                 Nsims, burn, thin, use_H = 10, use_shrinkage = TRUE,
+                 bias_cor = TRUE, theta_inf = 0.01,
                  mh_n_pis = 100, mh_n_pjs = 100, mh_n_rho = 100,
                  stick_alpha = 5, prior_theta = c(1, 1), prior_tau = c(5, 5),
                  prior_rho = c(5, 5), prior_mu0 = 0, prior_sigmasq0 = 10,
@@ -86,7 +88,8 @@ MCMC <- function(obs_A, focus, occur_B, occur_P, obs_X, obs_W, Cu, Cv,
                      O_P = TRUE)
   }
   
-  if (!bias_cor) {  # Without bias adjustment, some parameters are not updated:
+  # Without bias adjustment, some parameters are not updated:
+  if (!bias_cor) {
     cat('Without bias correction a number of parameters will not be sampled.', fill = TRUE)
     sampling$L <- FALSE
     sampling$sigmasq_p <- FALSE
@@ -96,6 +99,13 @@ MCMC <- function(obs_A, focus, occur_B, occur_P, obs_X, obs_W, Cu, Cv,
     sampling$pjs <- FALSE
     sampling$O_B <- FALSE
     sampling$O_P <- FALSE
+  }
+  
+  # If the shrinkage prior is NOT used, some parameters will not be updated.
+  if (!use_shrinkage) {
+    cat('Without the shrinkage prior, some parameters are not updated.', fill = TRUE)
+    sampling$v <- FALSE
+    sampling$z <- FALSE
   }
   
   # If the probabilities of occurence for the first set of species is either 0
@@ -276,11 +286,8 @@ MCMC <- function(obs_A, focus, occur_B, occur_P, obs_X, obs_W, Cu, Cv,
     }
   }
   
-  this_omega <- OmegaFromV(v_val = this_v)
   this_Su <- this_ru * Cu + (1 - this_ru) * diag(nB)
   this_Sv <- this_rv * Cv + (1 - this_rv) * diag(nP)
-  this_z <- sample(c(1 : use_H), use_H, replace = TRUE, prob = this_omega)
-  
   
   # If we do not perform bias correction, change the starting values:
   if (!bias_cor) {
@@ -298,6 +305,18 @@ MCMC <- function(obs_A, focus, occur_B, occur_P, obs_X, obs_W, Cu, Cv,
     this_FO <- matrix(NA, nB, nP)  # Does not inform anything.
   }
   
+  # If we do not use the shrinkage prior, change the starting values:
+  if (!use_shrinkage) {
+    this_v <- rep(0, use_H)
+  }
+
+  this_omega <- OmegaFromV(v_val = this_v)
+  if (sum(this_omega) > 0) {  # Shrinkage prior is used.
+    this_z <- sample(c(1 : use_H), use_H, replace = TRUE, prob = this_omega)
+  } else {  # When shrinkage prior NOT used: thetas from slab, z not updated.
+    this_z <- rep(use_H + 1, use_H)
+  }
+
   
   # ---------------- PART 4 ------------- #
   # Performing the MCMC.
