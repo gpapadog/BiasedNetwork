@@ -528,7 +528,7 @@ MCMC <- function(obs_A, focus, occur_B, occur_P, obs_X, obs_W, Cu, Cv,
                           var_covs = this_sigmasq_m,
                           curr_inter = this_L, coefs_inter = this_lambda,
                           omega_inter = omega_L,
-                          prior_S_inv = this_Su_inv)  
+                          prior_S_inv = this_Su_inv)
     }
     
     
