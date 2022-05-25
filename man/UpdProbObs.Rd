@@ -10,7 +10,8 @@ UpdProbObs(
   curr_inter,
   obs_inter,
   mh_n,
-  n_studies,
+  obs_in_poss,
+  unobs_in_poss,
   latfac,
   coefs_probobs,
   var_probobs
@@ -34,10 +35,15 @@ the other set of species.}
 
 \item{mh_n}{Numeric. Parameter n in the Beta proposal distribution.}
 
-\item{n_studies}{Matrix with rows corresponding to the set of species we
+\item{obs_in_poss}{Matrix with rows corresponding to the set of species we
 are updating and rows corresponding to the other set. The matrix includes
-integer values with the number of studies that have detected at least one
-interaction of both species.}
+a count for the number of studies that could have recorded the interaction
+and did record it.}
+
+\item{unobs_in_poss}{Matrix with rows corresponding to the set of species we
+are updating and rows corresponding to the other set. The matrix includes
+a count for the number of studies that could have recorded the interaction
+but they did not record it.}
 
 \item{latfac}{Current values of the latent factors for the set of species
 whose probability of detection is to be updated. Matrix with rows

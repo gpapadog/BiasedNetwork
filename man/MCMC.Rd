@@ -7,7 +7,9 @@ interactions}
 \usage{
 MCMC(
   obs_A,
-  obs_n,
+  focus,
+  occur_B,
+  occur_P,
   obs_X,
   obs_W,
   Cu,
@@ -16,6 +18,7 @@ MCMC(
   burn,
   thin,
   use_H = 10,
+  use_shrinkage = TRUE,
   bias_cor = TRUE,
   theta_inf = 0.01,
   mh_n_pis = 100,
@@ -33,10 +36,22 @@ MCMC(
 )
 }
 \arguments{
-\item{obs_A}{Observed interaction matrix. Contains values of 0 and 1.}
+\item{obs_A}{Observed interaction array. Contains values of 0 and 1. The
+array is of three dimensions. The first dimension represents the first set
+of species, the second dimension is the second set of species, and the third
+dimension is the different studies.}
 
-\item{obs_n}{Matrix with the same dimensions as obs_A. Includes the number
-of studies in which both species were observed.}
+\item{focus}{Array of three dimensions corresponding to the two sets of
+species, and the different studies. Values are 0 or 1. This array represents
+whether the current study would be willing to record the interactions of a
+given species. The value should be 1 except for studies that are animal or
+plant-oriented, where the value for species that are not of focus will be 0.}
+
+\item{occur_B}{Matrix with rows corresponding to the first set of species
+and columns to studies. Values represent the probability of occurence, and
+they should be between 0 and 1.}
+
+\item{occur_P}{Same as occur_B but for the second set of species.}
 
 \item{obs_X}{Matrix of observed covariates for the first set of species.
 Rows correspond to species, columns to covariates. Continuous covariates
@@ -55,6 +70,9 @@ should be first, and binary covariates should follow.}
 \item{thin}{MCMC sampling thinning.}
 
 \item{use_H}{Number of latent factors to be used. Defaults to 10.}
+
+\item{use_shrinkage}{Logical. Whether the shrinkage prior on the variance 
+terms should be used. Defaults to TRUE.}
 
 \item{bias_cor}{Logical. Whether the model should aim to correct for
 geographical and taxonomical bias. If set to FALSE, the MCMC is simplied
