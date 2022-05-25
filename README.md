@@ -14,6 +14,10 @@ library(devtools)
 devtools::install_github("gpapadog/BiasedNetwork")
 ```
 
+# Example
+
+We use this code for a study of bird and plant interactions. See https://github.com/gpapadog/Bird_Plant_Interactions.
+
 ## Acknowledgements
 
 This project has received funding from the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme (grant agreement No 856506; ERC-synergy project LIFEPLAN)
