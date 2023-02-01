@@ -18,7 +18,7 @@ UpdExtraVar <- function(mod_coef, shr_var, prior_spec) {
   new_a <- (prior_spec[1] + 1) / 2
   
   # New rate parameter:
-  if (class(mod_coef) == 'numeric') {
+  if (inherits(mod_coef, 'numeric')) {
     new_b_add <- mod_coef ^ 2 / shr_var
     
   } else {  # Class is matrix:
@@ -30,7 +30,7 @@ UpdExtraVar <- function(mod_coef, shr_var, prior_spec) {
   # Drawing values:
   r <- 1 / rgamma(n = length(mod_coef), shape = new_a, rate = new_b)
   
-  if (class(mod_coef) == 'matrix') {
+  if (inherits(mod_coef, 'matrix')) {
     r <- matrix(r, nrow = nrow(mod_coef), ncol = ncol(mod_coef))
   }
   

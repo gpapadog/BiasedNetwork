@@ -40,10 +40,10 @@ PredictInteractions <- function(pred_X, pred_W, mcmc, corr_mat) {
   use_H <- dim(mcmc$Us)[3]
   
   # If there is only one species, turn vector to matrix:
-  if (class(pred_X) == 'numeric') {
+  if (inherits(pred_X, 'numeric')) {
     pred_X <- matrix(pred_X, nrow = 1)
   }
-  if (class(pred_W) == 'numeric') {
+  if (inherits(pred_W, 'numeric')) {
     pred_W <- matrix(pred_W, nrow = 1)
   }
   
