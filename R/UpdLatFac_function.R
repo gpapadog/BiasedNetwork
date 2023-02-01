@@ -39,13 +39,16 @@
 #' latent factors are updated using this function.
 #' @param prior_S_inv The inverse of the current correlation matrix for the
 #' latent factors that are being updated.
+#' @param cut_feed Logical. Whether we should cut the feedback from the
+#' interaction and detectability submodels into the latent factors. Defaults to
+#' FALSE, in which case the full posterior is considered.
 #' 
 UpdLatFac <- function(latfac, latfac_others,
                       probobs, coefs_probobs, var_probobs,
                       obs_covs, omega_obs_covs, num_covs, coefs_covs,
                       var_covs,
                       curr_inter, coefs_inter, omega_inter,
-                      prior_S_inv) {
+                      prior_S_inv, cut_feed = FALSE) {
   
   
   ret <- latfac
@@ -85,10 +88,11 @@ UpdLatFac <- function(latfac, latfac_others,
     }
     
     
-    # Part 1(B): If bias correction is performed, I update the prior and
-    # continuous traits to includethe model for the probability of observing.
+    # Part 1(B): If bias correction is performed and the feedback is allowed, I
+    # update the prior and continuous traits to include the model for the
+    # probability of observing.
     
-    if (bias_cor) {
+    if (bias_cor & !cut_feed) {
       
       coef_diag <- coefs_probobs[hh + 1] ^ 2 / var_probobs
       Spart_inv <- Spart_inv + coef_diag * diag(num_obs)
@@ -112,10 +116,12 @@ UpdLatFac <- function(latfac, latfac_others,
     # Starting from what we have (the partial information):
     new_S <- Spart_inv
     
-    # Adding the terms for interaction model:
-    omega_latfac <- sweep(omega_inter, 2, FUN = '*', latfac_others[, hh] ^ 2)
-    add_var <- coefs_inter[hh + 1] ^ 2 * diag(apply(omega_latfac, 1, sum))
-    new_S <- new_S + add_var
+    # If feedback is allowed, we add the terms for interaction model:
+    if (!cut_feed) {
+      omega_latfac <- sweep(omega_inter, 2, FUN = '*', latfac_others[, hh] ^ 2)
+      add_var <- coefs_inter[hh + 1] ^ 2 * diag(apply(omega_latfac, 1, sum))
+      new_S <- new_S + add_var
+    }
     
     # Adding the terms for the binary covariate models:
     for (jj in 1 : num_covs[2]) {
@@ -129,7 +135,7 @@ UpdLatFac <- function(latfac, latfac_others,
     
     
     # Part 3: Updating the mean of the conditional posterior to include the
-    # Polya-Gamma components for themodel for the true interactions L, and
+    # Polya-Gamma components for the model for the true interactions L, and
     # the models for binary covariates.
     
     
@@ -138,19 +144,21 @@ UpdLatFac <- function(latfac, latfac_others,
     
     # ----- Adding the part corresponding to the L model ------ #
     
-    # U*V array (to avoid looping over j)
-    ext_UV <- array(rep(ret[, - hh], num_obs_other),
-                    dim = c(num_obs, Hval - 1, num_obs_other))
-    ext_UV <- sweep(ext_UV, c(2, 3), FUN = '*', t(latfac_others[, - hh]))
-    
-    # Predictions excluding factor h (using sweep for computational gains):
-    pred <- sweep(ext_UV, 2, FUN = '*', coefs_inter[- c(1, hh + 1)])
-    pred <- coefs_inter[1] + apply(pred, c(1, 3), sum)
-    resid <- (curr_inter - 1 / 2) / omega_inter - pred
-    scaled_resid <- sweep(omega_inter * resid, 2, FUN = '*', latfac_others[, hh])
-    
-    # Updating the mean:
-    new_m <- new_m + coefs_inter[hh + 1] * apply(scaled_resid, 1, sum)
+    if (!cut_feed) {
+      # U*V array (to avoid looping over j)
+      ext_UV <- array(rep(ret[, - hh], num_obs_other),
+                      dim = c(num_obs, Hval - 1, num_obs_other))
+      ext_UV <- sweep(ext_UV, c(2, 3), FUN = '*', t(latfac_others[, - hh]))
+      
+      # Predictions excluding factor h (using sweep for computational gains):
+      pred <- sweep(ext_UV, 2, FUN = '*', coefs_inter[- c(1, hh + 1)])
+      pred <- coefs_inter[1] + apply(pred, c(1, 3), sum)
+      resid <- (curr_inter - 1 / 2) / omega_inter - pred
+      scaled_resid <- sweep(omega_inter * resid, 2, FUN = '*', latfac_others[, hh])
+      
+      # Updating the mean:
+      new_m <- new_m + coefs_inter[hh + 1] * apply(scaled_resid, 1, sum)
+    }
     
     # ----- Adding the part corresponding to the binary covariates ------ #
     

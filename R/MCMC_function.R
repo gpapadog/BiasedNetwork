@@ -63,6 +63,9 @@
 #' If sampling is set to FALSE for a parameter, it is recommended that the
 #' corresponding start_value is specified to be set to the parameter's true
 #' value. Defaults to NULL, and when set to NULL all parameters are sampled.
+#' @param cut_feed Logical. Whether we should cut the feedback from the
+#' interaction and detectability submodels into the latent factors. Defaults to
+#' FALSE, in which case the full posterior is considered.
 #' 
 #' @export
 #' 
@@ -73,7 +76,7 @@ MCMC <- function(obs_A, focus, occur_B, occur_P, obs_X, obs_W, Cu, Cv,
                  stick_alpha = 5, prior_theta = c(1, 1), prior_tau = c(5, 5),
                  prior_rho = c(5, 5), prior_mu0 = 0, prior_sigmasq0 = 10,
                  prior_sigmasq = c(1, 1), start_values = NULL,
-                 sampling = NULL) {
+                 sampling = NULL, cut_feed = FALSE) {
   
   
   # -------------------- PART 0 ------------------- #
@@ -528,7 +531,8 @@ MCMC <- function(obs_A, focus, occur_B, occur_P, obs_X, obs_W, Cu, Cv,
                           var_covs = this_sigmasq_m,
                           curr_inter = this_L, coefs_inter = this_lambda,
                           omega_inter = omega_L,
-                          prior_S_inv = this_Su_inv)
+                          prior_S_inv = this_Su_inv,
+                          cut_feed = cut_feed)
     }
     
     
@@ -543,7 +547,8 @@ MCMC <- function(obs_A, focus, occur_B, occur_P, obs_X, obs_W, Cu, Cv,
                           var_covs = this_sigmasq_l,
                           curr_inter = t(this_L), coefs_inter = this_lambda,
                           omega_inter = t(omega_L),
-                          prior_S_inv = this_Sv_inv)  
+                          prior_S_inv = this_Sv_inv,
+                          cut_feed = cut_feed)  
     }
     
     
