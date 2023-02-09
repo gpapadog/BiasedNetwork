@@ -694,7 +694,7 @@ MCMC <- function(obs_A, focus, occur_B, occur_P, obs_X, obs_W, Cu, Cv,
       for (jj in 1 : sum(pP)) {
         this_miss <- miss_W_ind[[jj]]
         if (length(this_miss) > 0) {
-          W_mean <- cbind(1, this_V[this_miss, ]) %*% matrix(this_gamma[jj, ], ncol = 1)
+          W_mean <- cbind(1, this_V[this_miss, , drop = FALSE]) %*% matrix(this_gamma[jj, ], ncol = 1)
           if (jj <= pP[1]) {
             this_W[this_miss, jj] <- rnorm(length(this_miss), mean = W_mean,
                                            sd = sqrt(this_sigmasq_l[jj]))
